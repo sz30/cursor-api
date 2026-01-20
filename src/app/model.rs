@@ -423,6 +423,12 @@ impl ExtToken {
     #[inline]
     pub fn timezone_name(&self) -> &'static str { self.timezone().name() }
 
+    /// 返回关联的时区名称的头部值
+    #[inline]
+    pub fn timezone_as_header_value(&self) -> http::HeaderValue {
+        unsafe { crate::common::model::HeaderValue::from_static(self.timezone_name()).into() }
+    }
+
     /// 获取当前时区的当前时间
     #[inline]
     pub fn now(&self) -> chrono::DateTime<chrono_tz::Tz> {

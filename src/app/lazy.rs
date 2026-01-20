@@ -8,7 +8,7 @@ use super::{
     },
     model::{DateTime, GcppHost},
 };
-use crate::common::utils::parse_from_env;
+use crate::common::{model::HeaderValue, utils::parse_from_env};
 use alloc::borrow::Cow;
 use manually_init::ManuallyInit;
 pub use path::{
@@ -29,6 +29,10 @@ pub fn init_start_time() { START_TIME.init(DateTime::now()) }
 pub fn init() {
     PRI_REVERSE_PROXY_HOST.init(parse_from_env("PRI_REVERSE_PROXY_HOST", EMPTY_STRING));
     PUB_REVERSE_PROXY_HOST.init(parse_from_env("PUB_REVERSE_PROXY_HOST", EMPTY_STRING));
+    HeaderValue::validate(PRI_REVERSE_PROXY_HOST.as_bytes())
+        .expect("HeaderValue::validate with invalid bytes");
+    HeaderValue::validate(PUB_REVERSE_PROXY_HOST.as_bytes())
+        .expect("HeaderValue::validate with invalid bytes");
     KEY_PREFIX.init(parse_from_env("KEY_PREFIX", DEFAULT_KEY_PREFIX));
     unsafe {
         USE_PRI_REVERSE_PROXY = !PRI_REVERSE_PROXY_HOST.is_empty();
@@ -80,6 +84,13 @@ pub static GENERAL_GCPP_HOST: LazyLock<GcppHost> = LazyLock::new(|| {
 
 pub static PRI_REVERSE_PROXY_HOST: ManuallyInit<Cow<'static, str>> = ManuallyInit::new();
 pub static PUB_REVERSE_PROXY_HOST: ManuallyInit<Cow<'static, str>> = ManuallyInit::new();
+
+pub fn pri_reverse_proxy_host() -> http::header::HeaderValue {
+    unsafe { HeaderValue::from_bytes(PRI_REVERSE_PROXY_HOST.get().as_bytes()).into() }
+}
+pub fn pub_reverse_proxy_host() -> http::header::HeaderValue {
+    unsafe { HeaderValue::from_bytes(PUB_REVERSE_PROXY_HOST.get().as_bytes()).into() }
+}
 
 const DEFAULT_KEY_PREFIX: &str = "sk-";
 pub static KEY_PREFIX: ManuallyInit<Cow<'static, str>> = ManuallyInit::new();

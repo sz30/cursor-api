@@ -74,32 +74,32 @@ impl StreamMessage {
                     return StreamMessage::Content(String::new());
                 }
 
-                use crate::common::utils::StringBuilder;
+                use crate::common::utils::string_builder::StringBuilder;
 
                 // 计算需要添加的字符串部分数量
                 // 每个web引用需要8个部分：序号、"[", 标题、"](", URL、")<", chunk、换行符
                 // 再加上头部"WebReferences:\n"和末尾的额外换行符，共两个部分
-                let parts_count = refs.len() * 8 + 2;
+                // let parts_count = refs.len() * 8 + 2;
 
-                let mut builder =
-                    StringBuilder::with_capacity(parts_count).append("WebReferences:\n");
+                let mut string = String::with_capacity(refs.len() * 48).append("WebReferences:\n");
                 let mut buffer = itoa::Buffer::new();
 
                 for (i, web_ref) in refs.iter().enumerate() {
-                    builder
-                        .append_mut(buffer.format(i + 1).to_string())
+                    string
+                        .append_mut(buffer.format(i + 1))
                         .append_mut(". [")
                         .append_mut(&web_ref.title)
                         .append_mut("](")
                         .append_mut(&web_ref.url)
-                        .append_mut(")<")
-                        .append_mut(&web_ref.chunk)
-                        .append_mut(">\n");
+                        // .append_mut(")<")
+                        // .append_mut(&web_ref.chunk)
+                        // .append_mut(">\n");
+                        .append_mut(")\n");
                 }
 
-                builder.append_mut("\n");
+                string.append_mut("\n");
 
-                StreamMessage::Content(builder.build())
+                StreamMessage::Content(string)
             }
             other => other,
         }

@@ -7,8 +7,9 @@ pub mod tri;
 pub mod userinfo;
 
 use alloc::borrow::Cow;
-use http::StatusCode;
-use serde::{Serialize, Serializer, ser::SerializeStruct};
+use core::mem::transmute;
+use http::status::StatusCode;
+use serde::{Serialize, Serializer, ser::SerializeStruct as _};
 
 #[derive(Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -61,7 +62,7 @@ pub struct HeaderValue {
 
 impl HeaderValue {
     #[inline(always)]
-    pub const unsafe fn into(self) -> http::HeaderValue { unsafe { core::mem::transmute(self) } }
+    pub const unsafe fn into(self) -> http::header::HeaderValue { unsafe { transmute(self) } }
     #[inline]
     pub const fn from_static(src: &'static str) -> HeaderValue {
         HeaderValue { inner: bytes::Bytes::from_static(src.as_bytes()), is_sensitive: false }
@@ -70,7 +71,33 @@ impl HeaderValue {
     pub fn from_bytes(src: &[u8]) -> HeaderValue {
         HeaderValue { inner: bytes::Bytes::copy_from_slice(src), is_sensitive: false }
     }
+    pub fn from_integer<I: ::itoa::Integer>(i: I) -> http::header::HeaderValue {
+        unsafe { Self::from_bytes(::itoa::Buffer::new().format(i).as_bytes()).into() }
+    }
+    pub fn validate(src: &[u8]) -> Result<(), http::header::InvalidHeaderValue> {
+        for &b in src {
+            if !is_valid(b) {
+                return Err(unsafe { transmute(()) });
+            }
+        }
+        Ok(())
+    }
 }
+
+impl const From<http::header::HeaderValue> for HeaderValue {
+    fn from(value: http::header::HeaderValue) -> Self { unsafe { transmute(value) } }
+}
+
+impl const From<&http::header::HeaderValue> for &HeaderValue {
+    fn from(value: &http::header::HeaderValue) -> Self { unsafe { transmute(value) } }
+}
+
+impl From<String> for HeaderValue {
+    fn from(value: String) -> Self { Self { inner: value.into(), is_sensitive: false } }
+}
+
+#[inline]
+fn is_valid(b: u8) -> bool { b >= 32 && b != 127 || b == b'\t' }
 
 #[inline]
 pub fn is_default<T>(v: &T) -> bool

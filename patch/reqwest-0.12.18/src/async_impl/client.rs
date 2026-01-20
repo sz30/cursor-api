@@ -40,7 +40,7 @@ use crate::{
 };
 use http::{
     Uri,
-    header::{ACCEPT, Entry, HeaderMap, HeaderValue, PROXY_AUTHORIZATION, USER_AGENT},
+    header::{Entry, HeaderMap, HeaderValue, PROXY_AUTHORIZATION, USER_AGENT},
     uri::Scheme,
 };
 use hyper_util::client::legacy::connect::HttpConnector;
@@ -280,14 +280,14 @@ impl ClientBuilder {
     ///
     /// This is the same as `Client::builder()`.
     pub fn new() -> Self {
-        let mut headers: HeaderMap<HeaderValue> = HeaderMap::with_capacity(2);
-        headers.insert(ACCEPT, HeaderValue::from_static("*/*"));
+        // let mut headers: HeaderMap<HeaderValue> = HeaderMap::with_capacity(2);
+        // headers.insert(http::header::ACCEPT, HeaderValue::from_static("*/*"));
 
         ClientBuilder {
             config: Config {
                 error: None,
                 accepts: Accepts::default(),
-                headers,
+                headers: HeaderMap::with_capacity(1),
                 #[cfg(feature = "__tls")]
                 hostname_verification: true,
                 #[cfg(feature = "__tls")]

@@ -179,6 +179,8 @@ rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
 reqwest = { version = "0.13", default-features = false, features = [
     "gzip",
     "brotli",
+    "zstd",
+    "deflate",
     "json",
     # "query",
     "stream",
@@ -226,11 +228,15 @@ toml = { version = "0.9.8", default-features = false, features = [
     "parse",
 ] }
 tower-http = { version = "0.6", features = ["cors", "limit"] }
-# tracing = { version = "*", default-features = false, features = [
-#     "max_level_off",
-#     "release_max_level_off",
+tracing = { version = "*", default-features = false, features = [
+    "max_level_off",
+    "release_max_level_off",
+] }
+# tracing-subscriber = { version = "0.3", default-features = false, features = [
+#     "fmt",
+#     "std",
+#     "env-filter",
 # ] }
-tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "std", "env-filter"] }
 url = { version = "2.5", default-features = false, features = ["serde"] }
 uuid = { version = "1.14", default-features = false, features = [
     "v4",

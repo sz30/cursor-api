@@ -18,23 +18,23 @@ use manually_init::ManuallyInit;
 crate::define_typed_constants! {
     &'static str => {
         /// 默认的客户端版本号
-        DEFAULT_CLIENT_VERSION = "1.0.0",
+        DEFAULT_CLIENT_VERSION = "2.0.0",
         /// 环境变量名：Cursor 客户端版本
         ENV_CURSOR_CLIENT_VERSION = "CURSOR_CLIENT_VERSION",
         /// Chrome 版本信息
-        CHROME_VERSION_INFO = " Chrome/132.0.6834.210 Electron/34.3.4 Safari/537.36",
-        /// Windows User-Agent 前缀
-        #[cfg(windows)]
-        UA_PREFIX_WINDOWS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/",
-        /// Unix/macOS User-Agent 前缀
-        #[cfg(unix)]
-        UA_PREFIX_UNIX = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/",
-        /// 默认的 Windows User-Agent
-        #[cfg(windows)]
-        DEFAULT_UA_WINDOWS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/1.0.0 Chrome/132.0.6834.210 Electron/34.3.4 Safari/537.36",
-        /// 默认的 Unix/macOS User-Agent
-        #[cfg(unix)]
-        DEFAULT_UA_UNIX = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/1.0.0 Chrome/132.0.6834.210 Electron/34.3.4 Safari/537.36",
+        CHROME_VERSION_INFO = " Chrome/138.0.7204.251 Electron/37.7.0 Safari/537.36",
+        /// User-Agent 前缀
+        UA_PREFIX = cfg_select! {
+            target_os = "windows" => {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/"}
+            target_os = "macos" => {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/"}
+            target_os = "linux" => {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/"}
+        },
+        /// 默认的 User-Agent
+        DEFAULT_UA = cfg_select! {
+            target_os = "windows" => {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/2.0.0 Chrome/138.0.7204.251 Electron/37.7.0 Safari/537.36"}
+            target_os = "macos" => {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/2.0.0 Chrome/138.0.7204.251 Electron/37.7.0 Safari/537.36"}
+            target_os = "linux" => {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/2.0.0 Chrome/138.0.7204.251 Electron/37.7.0 Safari/537.36"}
+        },
     }
 
     usize => {
@@ -42,8 +42,6 @@ crate::define_typed_constants! {
         VERSION_MIN_LENGTH = 5,
         /// 版本字符串最大长度
         VERSION_MAX_LENGTH = 32,
-        /// StringBuilder 初始容量
-        STRING_BUILDER_CAPACITY = 3,
     }
 
     u8 => {
@@ -71,10 +69,8 @@ pub fn cursor_client_version() -> http::header::HeaderValue { CLIENT_VERSION.get
 #[inline(always)]
 pub fn cursor_version() -> bytes::Bytes {
     use crate::common::model::HeaderValue;
-    #[allow(clippy::missing_transmute_annotations)]
-    unsafe {
-        core::mem::transmute::<_, &HeaderValue>(CLIENT_VERSION.get()).inner.clone()
-    }
+    let value_ref: &'static HeaderValue = CLIENT_VERSION.get().into();
+    value_ref.inner.clone()
 }
 
 /// 获取 Cursor 用户代理的 HeaderValue
@@ -114,27 +110,10 @@ pub fn initialize_cursor_version() {
         }
     };
 
-    use crate::common::utils::string_builder::StringBuilder;
-
     // 构建 User-Agent 字符串
-    #[cfg(windows)]
     let (ua_string, default_ua) = {
-        let ua = StringBuilder::with_capacity(STRING_BUILDER_CAPACITY)
-            .append(UA_PREFIX_WINDOWS)
-            .append(version.deref())
-            .append(CHROME_VERSION_INFO)
-            .build();
-        (ua, DEFAULT_UA_WINDOWS)
-    };
-
-    #[cfg(unix)]
-    let (ua_string, default_ua) = {
-        let ua = StringBuilder::with_capacity(STRING_BUILDER_CAPACITY)
-            .append(UA_PREFIX_UNIX)
-            .append(version.deref())
-            .append(CHROME_VERSION_INFO)
-            .build();
-        (ua, DEFAULT_UA_UNIX)
+        let ua = [UA_PREFIX, version.deref(), CHROME_VERSION_INFO].concat();
+        (ua, DEFAULT_UA)
     };
 
     let ua_header = match http::header::HeaderValue::from_str(&ua_string) {
@@ -208,13 +187,9 @@ pub const fn is_valid_version_format(version: &str) -> bool {
 pub fn validate_version_string(version: &str) {
     if !is_valid_version_format(version) {
         __cold_path!();
-        use crate::common::utils::string_builder::StringBuilder;
-        let warning = StringBuilder::with_capacity(STRING_BUILDER_CAPACITY)
-            .append("Warning: Invalid version format '")
-            .append(version)
-            .append("'. Expected format: major.minor.patch (e.g., 1.0.0)\n")
-            .build();
-        __eprint!(&warning);
+        eprint!(
+            "Warning: Invalid version format '{version}'. Expected format: major.minor.patch (e.g., 1.0.0)\n"
+        );
     }
 }
 

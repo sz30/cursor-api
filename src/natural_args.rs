@@ -1,4 +1,3 @@
-use crate::common::utils::StringBuilder;
 use std::{env, process::exit};
 
 // String constants for natural language command parsing and user messages.
@@ -268,26 +267,28 @@ fn load_env_file(filename: &str, override_existing: bool) {
         dotenvy::from_filename(filename)
     } {
         Ok(result) => {
-            let mut buffer = itoa::Buffer::new();
-            let mut msg = StringBuilder::with_capacity(7)
-                .append(INFO_IMPORTING)
-                .append(filename)
-                .append(INFO_LOADED);
-
-            if result.skipped_or_overridden > 0 {
-                msg.append_mut(buffer.format(result.loaded).to_string());
-                if override_existing {
-                    msg.append_mut(INFO_OVERRIDDEN);
-                } else {
-                    msg.append_mut(INFO_SKIPPED);
-                }
-                msg.append_mut(buffer.format(result.skipped_or_overridden));
+            let msg = if result.skipped_or_overridden > 0 {
+                [
+                    INFO_IMPORTING,
+                    filename,
+                    INFO_LOADED,
+                    itoa::Buffer::new().format(result.loaded),
+                    if override_existing { INFO_OVERRIDDEN } else { INFO_SKIPPED },
+                    itoa::Buffer::new().format(result.skipped_or_overridden),
+                    INFO_CLOSING,
+                ]
+                .concat()
             } else {
-                msg.append_mut(buffer.format(result.loaded));
-            }
-
-            msg.append_mut(INFO_CLOSING);
-            __print!(msg.build());
+                [
+                    INFO_IMPORTING,
+                    filename,
+                    INFO_LOADED,
+                    itoa::Buffer::new().format(result.loaded),
+                    INFO_CLOSING,
+                ]
+                .concat()
+            };
+            __print!(msg);
         }
         Err(e) => {
             __cold_path!();
@@ -327,16 +328,16 @@ fn __process_args_impl(program_name: &str, args: &[String]) {
     if actions.is_empty() {
         __cold_path!();
         let command = args.join(" ");
-        __eprint!(
-            StringBuilder::with_capacity(6)
-                .append(ERROR_NOT_UNDERSTAND)
-                .append(&command)
-                .append("'\n")
-                .append(ERROR_TRY_HELP)
-                .append(program_name)
-                .append(ERROR_TRY_HELP_SUFFIX)
-                .build()
-        );
+        let msg = [
+            ERROR_NOT_UNDERSTAND,
+            command.as_str(),
+            "'\n",
+            ERROR_TRY_HELP,
+            program_name,
+            ERROR_TRY_HELP_SUFFIX,
+        ]
+        .concat();
+        __eprint!(msg);
         return;
     }
 
@@ -350,15 +351,8 @@ fn __process_args_impl(program_name: &str, args: &[String]) {
                 let h = host.unwrap_or(DEFAULT_LISTEN_HOST);
                 let p = port.unwrap_or(DEFAULT_LISTEN_PORT);
 
-                __print!(
-                    StringBuilder::with_capacity(5)
-                        .append(INFO_STARTING)
-                        .append(h)
-                        .append(":")
-                        .append(p)
-                        .append("\n")
-                        .build()
-                );
+                let msg = [INFO_STARTING, h, ":", p, "\n"].concat();
+                __print!(msg);
 
                 // SAFETY:
                 // 1. [Lifetime] Slices `h` and `p` are valid static or process-lifetime refs

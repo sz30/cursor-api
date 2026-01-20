@@ -82,11 +82,7 @@ pub async fn handle_build_key(
     let mut encoder = ::minicbor::Encoder::new(Vec::with_capacity(::minicbor::len(&key_config)));
     let _ = encoder.encode(key_config);
 
-    use crate::common::utils::string_builder;
-    let key = string_builder::StringBuilder::with_capacity(2)
-        .append(&**KEY_PREFIX)
-        .append(to_base64(&encoder.into_writer()))
-        .build();
+    let key = [&**KEY_PREFIX, to_base64(&encoder.into_writer()).as_str()].concat();
 
     (
         StatusCode::OK,

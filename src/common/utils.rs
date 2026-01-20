@@ -7,7 +7,24 @@ pub mod duration_fmt;
 pub mod hex;
 pub mod option_as_array;
 pub mod proto_encode;
-pub mod string_builder;
+pub mod string_builder {
+    pub trait StringBuilder {
+        fn append(self, string: &str) -> Self;
+        fn append_mut(&mut self, string: &str) -> &mut Self;
+    }
+    impl StringBuilder for String {
+        #[inline]
+        fn append(mut self, string: &str) -> Self {
+            self.push_str(string);
+            self
+        }
+        #[inline]
+        fn append_mut(&mut self, string: &str) -> &mut Self {
+            self.push_str(string);
+            self
+        }
+    }
+}
 pub mod ulid;
 
 use super::model::userinfo::{Session, StripeProfile, UsageProfile, UserProfile};
@@ -42,7 +59,6 @@ pub use proto_encode::{encode_message, encode_message_framed};
 use rep_move::RepMove;
 use reqwest::Client;
 use std::time::{SystemTime, UNIX_EPOCH};
-pub use string_builder::StringBuilder;
 
 pub trait ParseFromEnv: Sized + 'static {
     type Result: Sized + 'static = Self;
@@ -354,6 +370,7 @@ pub async fn get_available_models(
             trace_id: new_uuid_v4(),
             use_pri,
             cookie: None,
+            exact_length: Some(data.len()),
         });
         client.body(data).send().await.ok()?.bytes().await.ok()?
     };
@@ -737,6 +754,7 @@ pub async fn get_server_config(ext_token: ExtToken, use_pri: bool) -> Option<uui
             trace_id: new_uuid_v4(),
             use_pri,
             cookie: None,
+            exact_length: Some(0),
         });
         client.send().await.ok()?.bytes().await.ok()?
     };

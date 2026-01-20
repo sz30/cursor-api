@@ -9,10 +9,7 @@ use crate::{
             TokensTimezoneSetRequest, TokensUpdateRequest,
         },
     },
-    common::{
-        model::{ApiStatus, GenericError},
-        utils::string_builder::StringBuilder,
-    },
+    common::model::{ApiStatus, GenericError},
 };
 use alloc::{borrow::Cow, sync::Arc};
 use axum::{Json, extract::State};
@@ -308,13 +305,14 @@ pub async fn handle_update_tokens_profile(
     Ok(Json(CommonResponse {
         status: ApiStatus::Success,
         message: Cow::Owned(
-            StringBuilder::with_capacity(5)
-                .append(UPDATE_SUCCESS)
-                .append(updated_count.to_string())
-                .append("个令牌配置, ")
-                .append(failed_count.to_string())
-                .append(UPDATE_FAILURE_COUNT)
-                .build(),
+            [
+                UPDATE_SUCCESS,
+                itoa::Buffer::new().format(updated_count),
+                "个令牌配置, ",
+                itoa::Buffer::new().format(failed_count),
+                UPDATE_FAILURE_COUNT,
+            ]
+            .concat(),
         ),
     }))
 }
@@ -381,24 +379,26 @@ pub async fn handle_update_tokens_config_version(
         ));
     }
 
-    let updated_count = updated_count.to_string();
-    let failed_count = failed_count.to_string();
-    let message_builder = StringBuilder::with_capacity(if short_token_count > 0 { 7 } else { 5 })
-        .append(UPDATE_SUCCESS)
-        .append(&updated_count)
-        .append("个令牌配置版本；")
-        .append(&failed_count);
-
     let message = if short_token_count > 0 {
-        let short_token_count = short_token_count.to_string();
-
-        message_builder
-            .append("个令牌更新失败，其中有")
-            .append(&short_token_count)
-            .append("个令牌是非会话令牌")
-            .build()
+        [
+            UPDATE_SUCCESS,
+            itoa::Buffer::new().format(updated_count),
+            "个令牌配置版本；",
+            itoa::Buffer::new().format(failed_count),
+            "个令牌更新失败，其中有",
+            itoa::Buffer::new().format(short_token_count),
+            "个令牌是非会话令牌",
+        ]
+        .concat()
     } else {
-        message_builder.append(UPDATE_FAILURE_COUNT).build()
+        [
+            UPDATE_SUCCESS,
+            itoa::Buffer::new().format(updated_count),
+            "个令牌配置版本；",
+            itoa::Buffer::new().format(failed_count),
+            UPDATE_FAILURE_COUNT,
+        ]
+        .concat()
     };
 
     Ok(Json(CommonResponse { status: ApiStatus::Success, message: Cow::Owned(message) }))
@@ -455,13 +455,14 @@ pub async fn handle_refresh_tokens(
     Ok(Json(CommonResponse {
         status: ApiStatus::Success,
         message: Cow::Owned(
-            StringBuilder::with_capacity(5)
-                .append("已刷新")
-                .append(updated_count.to_string())
-                .append("个令牌, ")
-                .append(failed_count.to_string())
-                .append("个令牌刷新失败")
-                .build(),
+            [
+                "已刷新",
+                itoa::Buffer::new().format(updated_count),
+                "个令牌, ",
+                itoa::Buffer::new().format(failed_count),
+                "个令牌刷新失败",
+            ]
+            .concat(),
         ),
     }))
 }
@@ -521,13 +522,14 @@ pub async fn handle_set_tokens_status(
     Ok(Json(CommonResponse {
         status: ApiStatus::Success,
         message: Cow::Owned(
-            StringBuilder::with_capacity(5)
-                .append(SET_SUCCESS)
-                .append(updated_count.to_string())
-                .append("个令牌状态, ")
-                .append(failed_count.to_string())
-                .append(SET_FAILURE_COUNT)
-                .build(),
+            [
+                SET_SUCCESS,
+                itoa::Buffer::new().format(updated_count),
+                "个令牌状态, ",
+                itoa::Buffer::new().format(failed_count),
+                SET_FAILURE_COUNT,
+            ]
+            .concat(),
         ),
     }))
 }
@@ -595,13 +597,14 @@ pub async fn handle_set_tokens_alias(
     Ok(Json(CommonResponse {
         status: ApiStatus::Success,
         message: Cow::Owned(
-            StringBuilder::with_capacity(5)
-                .append(SET_SUCCESS)
-                .append(updated_count.to_string())
-                .append("个令牌别名, ")
-                .append(failed_count.to_string())
-                .append(SET_FAILURE_COUNT)
-                .build(),
+            [
+                SET_SUCCESS,
+                itoa::Buffer::new().format(updated_count),
+                "个令牌别名, ",
+                itoa::Buffer::new().format(failed_count),
+                SET_FAILURE_COUNT,
+            ]
+            .concat(),
         ),
     }))
 }
@@ -661,13 +664,14 @@ pub async fn handle_set_tokens_proxy(
     Ok(Json(CommonResponse {
         status: ApiStatus::Success,
         message: Cow::Owned(
-            StringBuilder::with_capacity(5)
-                .append(SET_SUCCESS)
-                .append(updated_count.to_string())
-                .append("个令牌代理, ")
-                .append(failed_count.to_string())
-                .append(SET_FAILURE_COUNT)
-                .build(),
+            [
+                SET_SUCCESS,
+                itoa::Buffer::new().format(updated_count),
+                "个令牌代理, ",
+                itoa::Buffer::new().format(failed_count),
+                SET_FAILURE_COUNT,
+            ]
+            .concat(),
         ),
     }))
 }
@@ -727,13 +731,14 @@ pub async fn handle_set_tokens_timezone(
     Ok(Json(CommonResponse {
         status: ApiStatus::Success,
         message: Cow::Owned(
-            StringBuilder::with_capacity(5)
-                .append(SET_SUCCESS)
-                .append(updated_count.to_string())
-                .append("个令牌时区, ")
-                .append(failed_count.to_string())
-                .append(SET_FAILURE_COUNT)
-                .build(),
+            [
+                SET_SUCCESS,
+                itoa::Buffer::new().format(updated_count),
+                "个令牌时区, ",
+                itoa::Buffer::new().format(failed_count),
+                SET_FAILURE_COUNT,
+            ]
+            .concat(),
         ),
     }))
 }
@@ -821,13 +826,14 @@ pub async fn handle_merge_tokens(
     Ok(Json(CommonResponse {
         status: ApiStatus::Success,
         message: Cow::Owned(
-            StringBuilder::with_capacity(5)
-                .append("已合并")
-                .append(updated_count.to_string())
-                .append("个令牌, ")
-                .append(failed_count.to_string())
-                .append("个令牌合并失败")
-                .build(),
+            [
+                "已合并",
+                itoa::Buffer::new().format(updated_count),
+                "个令牌, ",
+                itoa::Buffer::new().format(failed_count),
+                "个令牌合并失败",
+            ]
+            .concat(),
         ),
     }))
 }

@@ -14,7 +14,8 @@
     unboxed_closures,
     fn_traits,
     ptr_metadata,
-    maybe_uninit_as_bytes
+    maybe_uninit_as_bytes,
+    cfg_select
 )]
 #![allow(clippy::redundant_static_lifetimes, clippy::enum_variant_names, clippy::let_and_return)]
 
@@ -52,11 +53,11 @@ fn main() {
         }
     }));
 
-    tracing_subscriber::fmt()
-        .with_writer(std::fs::File::create("tracing.log").expect("创建日志文件失败"))
-        .with_ansi(false)
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .init();
+    // tracing_subscriber::fmt()
+    //     .with_writer(std::fs::File::create("tracing.log").expect("创建日志文件失败"))
+    //     .with_ansi(false)
+    //     .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+    //     .init();
 
     // 处理自然语言参数
     {

@@ -399,6 +399,7 @@ pub async fn handle_chat_completions(
         trace_id: new_uuid_v4(),
         use_pri,
         cookie: None,
+        exact_length: Some(data.len()),
     });
     // crate::debug!("request: {req:?}");
     // 发送请求
@@ -1200,6 +1201,7 @@ pub async fn handle_messages(
         trace_id: new_uuid_v4(),
         use_pri,
         cookie: None,
+        exact_length: Some(data.len()),
     });
     // crate::debug!("request: {req:?}");
     // 发送请求
@@ -1927,6 +1929,7 @@ pub async fn handle_messages_count_tokens(
         trace_id: new_uuid_v4(),
         use_pri,
         cookie: None,
+        exact_length: Some(data.len()),
     });
     // crate::debug!("request: {req:?}");
     // 请求

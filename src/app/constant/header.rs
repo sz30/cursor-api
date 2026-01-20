@@ -40,23 +40,29 @@ macro_rules! def_header_value {
     };
 }
 
-#[cfg(windows)]
 pub const UA: http::header::HeaderValue = http::header::HeaderValue::from_static(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+    cfg_select! {
+        target_os = "windows" => {"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"}
+        target_os = "macos" => {"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"}
+        target_os = "linux" => {"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36"}
+    }
 );
 
-#[cfg(unix)]
-pub const UA: http::header::HeaderValue = http::header::HeaderValue::from_static(
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-);
+pub const PLATFORM: http::header::HeaderValue =
+    http::header::HeaderValue::from_static(cfg_select! {
+        target_os = "windows" => {"\"Windows\""}
+        target_os = "macos" => {"\"macOS\""}
+        target_os = "linux" => {"\"Linux\""}
+    });
 
 def_header_value! {
     (NONE, ""),
+    (ZERO, "0"),
     (ONE, "1"),
-    // (FALSE, "false"),
+    (FALSE, "false"),
     (TRUE, "true"),
     (ENCODING, "gzip"),
-    (ENCODINGS, "gzip, deflate"),
+    (ENCODINGS, "gzip, deflate, br, zstd"),
     (HEADER_VALUE_ACCEPT, "*/*"),
     (LANGUAGE, "en-US"),
     (EMPTY, "empty"),
@@ -68,13 +74,12 @@ def_header_value! {
     (CLOSE, "close"),
     (TRAILERS, "trailers"),
     (U_EQ_0, "u=0"),
+    (U_EQ_1_I, "u=1, i"),
     (CONNECT_ES, "connect-es/1.6.1"),
-    // (NOT_A_BRAND, "\"Not-A.Brand\";v=\"99\", \"Chromium\";v=\"124\""),
-    // (MOBILE_NO, "?0"),
-    // (WINDOWS, "\"Windows\""),
-    // (UA_CURSOR, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Cursor/0.42.5 Chrome/124.0.6367.243 Electron/30.4.0 Safari/537.36"),
+    (NOT_A_BRAND, "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\""),
+    (MOBILE_NO, "?0"),
     (VSCODE_ORIGIN, "vscode-file://vscode-app"),
-    // (CROSS_SITE, "cross-site"),
+    (CROSS_SITE, "cross-site"),
     (EVENT_STREAM, "text/event-stream"),
     (CHUNKED, "chunked"),
     (JSON, "application/json"),
@@ -82,6 +87,12 @@ def_header_value! {
     (CONNECT_PROTO, "application/connect+proto"),
     (CURSOR_ORIGIN, "https://cursor.com"),
     (CURSOR_REFERER_URL, "https://cursor.com/dashboard"),
+    // (CURSOR_API2_HOST, super::CURSOR_API2_HOST),
+    // (CURSOR_HOST, super::CURSOR_HOST),
+    // (CURSOR_API4_HOST, super::CURSOR_API4_HOST),
+    // (CURSOR_GCPP_ASIA_HOST, super::CURSOR_GCPP_ASIA_HOST),
+    // (CURSOR_GCPP_EU_HOST, super::CURSOR_GCPP_EU_HOST),
+    // (CURSOR_GCPP_US_HOST, super::CURSOR_GCPP_US_HOST),
 }
 
 def_header_name! {
@@ -103,9 +114,9 @@ def_header_name! {
     (FS_CLIENT_KEY, "x-fs-client-key"),
     (REQUEST_ID, "x-request-id"),
     (NEW_ONBOARDING_COMPLETED, "x-new-onboarding-completed"),
-    // (SEC_CH_UA, "sec-ch-ua"),
-    // (SEC_CH_UA_MOBILE, "sec-ch-ua-mobile"),
-    // (SEC_CH_UA_PLATFORM, "sec-ch-ua-platform"),
+    (SEC_CH_UA, "sec-ch-ua"),
+    (SEC_CH_UA_MOBILE, "sec-ch-ua-mobile"),
+    (SEC_CH_UA_PLATFORM, "sec-ch-ua-platform"),
     (SEC_FETCH_DEST, "sec-fetch-dest"),
     (SEC_FETCH_MODE, "sec-fetch-mode"),
     (SEC_FETCH_SITE, "sec-fetch-site"),
@@ -114,6 +125,9 @@ def_header_name! {
     (STAINLESS_OS, "x-stainless-os"),
     (STAINLESS_ARCH, "x-stainless-arch"),
 }
+
+#[allow(unused_imports)]
+pub use http::header::{CONNECTION, HOST, TRANSFER_ENCODING};
 
 macro_rules! def_content_type {
     // 递归终点：所有项已处理完

@@ -65,6 +65,7 @@ pub async fn handle_cpp_config(
         trace_id: new_uuid_v4(),
         use_pri,
         cookie: headers.remove(COOKIE),
+        exact_length: Some(data.len()),
     });
 
     match CollectBytes(req.body(data)).await {
@@ -112,6 +113,7 @@ pub async fn handle_cpp_models(
         trace_id: new_uuid_v4(),
         use_pri,
         cookie: headers.remove(COOKIE),
+        exact_length: Some(0),
     });
 
     match CollectBytes(req).await {
@@ -173,6 +175,7 @@ pub async fn handle_upload_file(
         trace_id: new_uuid_v4(),
         use_pri,
         cookie: headers.remove(COOKIE),
+        exact_length: Some(data.len()),
     });
 
     let e = match CollectBytesParts(req.body(data)).await {
@@ -234,6 +237,7 @@ pub async fn handle_sync_file(
         trace_id: new_uuid_v4(),
         use_pri,
         cookie: headers.remove(COOKIE),
+        exact_length: Some(data.len()),
     });
 
     let e = match CollectBytesParts(req.body(data)).await {
@@ -295,6 +299,7 @@ pub async fn handle_stream_cpp(
         trace_id: new_uuid_v4(),
         use_pri,
         cookie: headers.remove(COOKIE),
+        exact_length: Some(data.len()),
     });
 
     let res = match req.body(data).send().await {

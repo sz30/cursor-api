@@ -4,10 +4,7 @@ use crate::{
         ProxyInfoResponse, ProxyUpdateRequest, SetGeneralProxyRequest,
         proxy_pool::{self, Proxies},
     },
-    common::{
-        model::{ApiStatus, GenericError},
-        utils::string_builder::StringBuilder,
-    },
+    common::model::{ApiStatus, GenericError},
 };
 use alloc::{borrow::Cow, sync::Arc};
 use axum::{Json, http::StatusCode};
@@ -16,7 +13,7 @@ type HashMap<K, V> = hashbrown::HashMap<K, V, ahash::RandomState>;
 
 crate::define_typed_constants! {
     &'static str => {
-        ERROR_SAVE_PROXY_CONFIG = "Failed to save proxy configuration: ",
+        // ERROR_SAVE_PROXY_CONFIG = "Failed to save proxy configuration: ",
         MESSAGE_SAVE_PROXY_CONFIG_FAILED = "无法保存代理配置",
         ERROR_PROXY_NAME_NOT_FOUND = "Proxy name not found",
         MESSAGE_PROXY_NAME_NOT_FOUND = "代理名称不存在",
@@ -26,6 +23,12 @@ crate::define_typed_constants! {
         MESSAGE_ADDED_PREFIX = "已添加 ",
         MESSAGE_ADDED_SUFFIX = " 个新代理",
     }
+}
+
+fn format_save_proxy_config_error(
+    e: Box<dyn core::error::Error + Send + Sync + 'static>,
+) -> String {
+    format!("Failed to save proxy configuration: {e}")
 }
 
 // 获取所有代理配置
@@ -57,12 +60,7 @@ pub async fn handle_set_proxies(
             Json(GenericError {
                 status: ApiStatus::Error,
                 code: None,
-                error: Some(Cow::Owned(
-                    StringBuilder::with_capacity(2)
-                        .append(ERROR_SAVE_PROXY_CONFIG)
-                        .append(e.to_string())
-                        .build(),
-                )),
+                error: Some(Cow::Owned(format_save_proxy_config_error(e))),
                 message: Some(Cow::Borrowed(MESSAGE_SAVE_PROXY_CONFIG_FAILED)),
             }),
         ));
@@ -124,12 +122,7 @@ pub async fn handle_add_proxy(
             Json(GenericError {
                 status: ApiStatus::Error,
                 code: None,
-                error: Some(Cow::Owned(
-                    StringBuilder::with_capacity(2)
-                        .append(ERROR_SAVE_PROXY_CONFIG)
-                        .append(e.to_string())
-                        .build(),
-                )),
+                error: Some(Cow::Owned(format_save_proxy_config_error(e))),
                 message: Some(Cow::Borrowed(MESSAGE_SAVE_PROXY_CONFIG_FAILED)),
             }),
         ));
@@ -144,11 +137,8 @@ pub async fn handle_add_proxy(
         proxies_count,
         general_proxy: None,
         message: Some(Cow::Owned(
-            StringBuilder::with_capacity(3)
-                .append(MESSAGE_ADDED_PREFIX)
-                .append(added_count.to_string())
-                .append(MESSAGE_ADDED_SUFFIX)
-                .build(),
+            [MESSAGE_ADDED_PREFIX, itoa::Buffer::new().format(added_count), MESSAGE_ADDED_SUFFIX]
+                .concat(),
         )),
     }))
 }
@@ -199,12 +189,7 @@ pub async fn handle_delete_proxies(
             Json(GenericError {
                 status: ApiStatus::Error,
                 code: None,
-                error: Some(Cow::Owned(
-                    StringBuilder::with_capacity(2)
-                        .append(ERROR_SAVE_PROXY_CONFIG)
-                        .append(e.to_string())
-                        .build(),
-                )),
+                error: Some(Cow::Owned(format_save_proxy_config_error(e))),
                 message: Some(Cow::Borrowed(MESSAGE_SAVE_PROXY_CONFIG_FAILED)),
             }),
         ));
@@ -255,12 +240,7 @@ pub async fn handle_set_general_proxy(
             Json(GenericError {
                 status: ApiStatus::Error,
                 code: None,
-                error: Some(Cow::Owned(
-                    StringBuilder::with_capacity(2)
-                        .append(ERROR_SAVE_PROXY_CONFIG)
-                        .append(e.to_string())
-                        .build(),
-                )),
+                error: Some(Cow::Owned(format_save_proxy_config_error(e))),
                 message: Some(Cow::Borrowed(MESSAGE_SAVE_PROXY_CONFIG_FAILED)),
             }),
         ));
